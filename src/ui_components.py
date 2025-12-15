@@ -572,6 +572,10 @@ class RaceProgressBarComponent(BaseComponent):
         
     def draw(self, window):
         """Render the progress bar with all markers"""
+        # Skip rendering entirely if hidden
+        if not self._visible:
+            return
+            
         self._calculate_bar_dimensions(window)
         
         current_frame = int(getattr(window, 'frame_index', 0))
