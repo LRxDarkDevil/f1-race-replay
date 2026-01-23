@@ -1240,6 +1240,7 @@ class RaceProgressBarComponent(BaseComponent):
     EVENT_RED_FLAG = "red_flag"
     EVENT_SAFETY_CAR = "safety_car"
     EVENT_VSC = "vsc"
+    EVENT_PIT_STOP = "pit_stop"
 
     # Color palette following F1 conventions
     COLORS = {
@@ -1252,6 +1253,7 @@ class RaceProgressBarComponent(BaseComponent):
         "red_flag": (220, 30, 30),
         "safety_car": (255, 140, 0),
         "vsc": (255, 165, 0),
+        "pit_stop": (148, 0, 211),  # Purple for pit stops
         "text": (220, 220, 220),
         "current_position": (255, 255, 255),
     }
@@ -1481,6 +1483,12 @@ class RaceProgressBarComponent(BaseComponent):
             # Draw amber segment for VSC
             self._draw_flag_segment(event, self.COLORS["vsc"])
 
+        elif event_type == self.EVENT_PIT_STOP:
+            # Draw purple dot for pit stop
+            size = 3
+            color = self.COLORS["pit_stop"]
+            arcade.draw_circle_filled(x, marker_bottom - 2, size, color)
+
     def _draw_flag_segment(self, event: dict, color: tuple):
         start_frame = event.get("frame", 0)
         end_frame = event.get("end_frame", start_frame + 100)  # default duration
@@ -1532,9 +1540,11 @@ class RaceProgressBarComponent(BaseComponent):
             self.EVENT_RED_FLAG: "Red Flag",
             self.EVENT_SAFETY_CAR: "Safety Car",
             self.EVENT_VSC: "Virtual SC",
+            self.EVENT_PIT_STOP: "Pit Stop",
         }
 
         tooltip_text = type_names.get(event_type, "Event")
+
         if label:
             tooltip_text = f"{tooltip_text}: {label}"
         if lap:
@@ -1572,9 +1582,11 @@ class RaceProgressBarComponent(BaseComponent):
             (self.COLORS["red_flag"], "■", "Red"),
             (self.COLORS["safety_car"], "■", "SC"),
             (self.COLORS["vsc"], "■", "VSC"),
+            (self.COLORS["pit_stop"], "●", "Pit"),
         ]
 
         legend_x = self._bar_left + self._bar_width + 50
+
         legend_y = self.bottom + self.height / 2
 
         for i, (color, symbol, label) in enumerate(legend_items):
@@ -2306,7 +2318,10 @@ class QualifyingLapTimeComponent(BaseComponent):
 
 
 def extract_race_events(
-    frames: List[dict], track_statuses: List[dict], total_laps: int
+    frames: List[dict],
+    track_statuses: List[dict],
+    total_laps: int,
+    pit_stops: List[dict] = None,
 ) -> List[dict]:
     """
     Extract race events from frame data for the progress bar.
@@ -2315,11 +2330,13 @@ def extract_race_events(
     - DNF events (when a driver stops appearing)
     - Leader changes (when the P1 position changes hands)
     - Flag events (from track_statuses)
+    - Pit stops
 
     Args:
         frames: List of frame dictionaries from telemetry
         track_statuses: List of track status events
         total_laps: Total number of laps in the race
+        pit_stops: List of pit stop events (optional)
 
     Returns:
         List of event dictionaries for the progress bar
@@ -2403,6 +2420,28 @@ def extract_race_events(
                     "end_frame": end_frame,
                     "label": "",
                     "lap": None,
+                }
+            )
+
+    # Add pit stop events
+    if pit_stops:
+        for pit in pit_stops:
+            start_time = pit.get("start_time", 0)
+            driver = pit.get("driver", "")
+            lap = pit.get("lap", "")
+
+            # Convert to frame (25 FPS)
+            frame = int(start_time * 25)
+
+            if frame < 0 or frame >= n_frames:
+                continue
+
+            events.append(
+                {
+                    "type": RaceProgressBarComponent.EVENT_PIT_STOP,
+                    "frame": frame,
+                    "label": driver,
+                    "lap": lap,
                 }
             )
 

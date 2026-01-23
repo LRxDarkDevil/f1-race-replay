@@ -434,7 +434,41 @@ def get_race_telemetry(session, session_type="R"):
     # We'll just iterate through all, skipping those < t
     fastest_lap_cursor = 0
 
+    # 4.2. Extract Pit Stops
+    pit_stops = []
+    try:
+        # Filter laps with valid PitInTime
+        pit_laps = session.laps.dropna(subset=["PitInTime"])
+        for _, lap in pit_laps.iterrows():
+            driver = lap["Driver"]
+            lap_num = lap["LapNumber"]
+
+            # Pit In Time
+            in_seconds = lap["PitInTime"].total_seconds()
+            rel_start = in_seconds - global_t_min
+
+            # Pit Out Time (might be NaN if they retired in pits, though usually present)
+            rel_end = None
+            if pd.notna(lap["PitOutTime"]):
+                out_seconds = lap["PitOutTime"].total_seconds()
+                rel_end = out_seconds - global_t_min
+
+            # Only include if within our timeline
+            if rel_start >= 0:
+                pit_stops.append(
+                    {
+                        "driver": driver,
+                        "lap": int(lap_num),
+                        "start_time": rel_start,
+                        "end_time": rel_end,
+                        "duration": (rel_end - rel_start) if rel_end else None,
+                    }
+                )
+    except Exception as e:
+        print(f"Error extracting pit stops: {e}")
+
     # 5. Build the frames + LIVE LEADERBOARD
+
     frames = []
     num_frames = len(timeline)
 
@@ -563,6 +597,7 @@ def get_race_telemetry(session, session_type="R"):
                 "frames": frames,
                 "driver_colors": get_driver_colors(session),
                 "track_statuses": formatted_track_statuses,
+                "pit_stops": pit_stops,
                 "total_laps": int(max_lap_number),
             },
             f,
@@ -575,6 +610,7 @@ def get_race_telemetry(session, session_type="R"):
         "frames": frames,
         "driver_colors": get_driver_colors(session),
         "track_statuses": formatted_track_statuses,
+        "pit_stops": pit_stops,
         "total_laps": int(max_lap_number),
     }
 
