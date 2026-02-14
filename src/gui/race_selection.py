@@ -1,10 +1,10 @@
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QComboBox, QPushButton, QTreeWidget, QTreeWidgetItem, QMessageBox, QInputDialog
+    QLabel, QComboBox, QPushButton, QTreeWidget, QTreeWidgetItem, QMessageBox
 )
 from PySide6.QtWidgets import QProgressDialog
 from PySide6.QtCore import QThread, Signal, Qt, QTimer
-from PySide6.QtGui import QPixmap, QFont
+#from PySide6.QtGui import QPixmap, QFont
 import sys
 import os
 import subprocess
@@ -23,7 +23,7 @@ class FetchScheduleWorker(QThread):
         super().__init__(parent)
         self.year = year
 
-    def run(self):
+    def run(self): #check
         try:
             # enable cache if available in project
             try:
