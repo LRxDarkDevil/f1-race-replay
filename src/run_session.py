@@ -41,7 +41,7 @@ def launch_telemetry_viewer():
     try:
       # Give the main application a moment to start the telemetry server
       time.sleep(3)
-      subprocess.run([sys.executable, "-m", "src.gui.telemetry_stream_viewer"], check=False)
+      subprocess.run([sys.executable, "-m", "src.insights.telemetry_stream_viewer"], check=False)
     except Exception as e:
       print(f"Failed to launch telemetry viewer: {e}")
   

@@ -177,7 +177,7 @@ class InsightsMenu(QMainWindow):
         try:
             import subprocess
             import sys
-            subprocess.Popen([sys.executable, "-m", "src.gui.telemetry_stream_viewer"])
+            subprocess.Popen([sys.executable, "-m", "src.insights.telemetry_stream_viewer"])
         except Exception as e:
             print(f"Failed to launch telemetry viewer: {e}")
             self.show_placeholder_message("Telemetry Stream Viewer")
