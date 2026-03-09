@@ -6,9 +6,11 @@ from src.f1_data import get_race_weekends_by_year
 import sys
 import os
 import subprocess
+from src.lib.season import get_season
 
 def cli_load():
-    current_year = 2025
+    current_year = get_season()
+
     style = Style([
         ("pointer", "fg:#e10600 bold"),
         ("selected", "noinherit fg:#64eb34 bold"),
